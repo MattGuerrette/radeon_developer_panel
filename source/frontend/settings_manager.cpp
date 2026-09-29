@@ -37,27 +37,6 @@ namespace rdp
         const QString settings_path = util::GetApplicationDataPath().absoluteFilePath(kSettingsFileName);
         settings_                   = std::make_unique<QSettings>(settings_path, QSettings::IniFormat);
 
-        // Cache the Light and Dark mode stylesheets
-        QFile common_style(":/common.qss");
-        if (common_style.open(QIODevice::ReadOnly))
-        {
-            const QString common_sheet = common_style.readAll();
-            light_style_sheet_         = common_sheet;
-            dark_style_sheet_          = common_sheet;
-
-            QFile light_style(":/light.qss");
-            if (light_style.open(QIODevice::ReadOnly))
-            {
-                light_style_sheet_.append(light_style.readAll());
-            }
-
-            QFile dark_style(":/dark.qss");
-            if (dark_style.open(QIODevice::ReadOnly))
-            {
-                dark_style_sheet_.append(dark_style.readAll());
-            }
-        }
-
         connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, this, &SettingsManager::OnColorSchemeChanged);
     }
 
@@ -80,26 +59,7 @@ namespace rdp
 
         qApp->setPalette(GetCurrentPalette());
 
-        ApplyStyleSheet(option);
-
         emit QtCommon::QtUtils::ColorTheme::Get().ColorThemeUpdated();
-    }
-
-    void SettingsManager::ApplyStyleSheet(ColorThemeOption color_theme)
-    {
-        if (color_theme == ColorThemeOption::kSystem)
-        {
-            color_theme = static_cast<ColorThemeOption>(QtCommon::QtUtils::DetectOsSetting());
-        }
-
-        if (color_theme == ColorThemeOption::kLight)
-        {
-            qApp->setStyleSheet(light_style_sheet_);
-        }
-        else if (color_theme == ColorThemeOption::kDark)
-        {
-            qApp->setStyleSheet(dark_style_sheet_);
-        }
     }
 
     QPalette SettingsManager::GetCurrentPalette() const

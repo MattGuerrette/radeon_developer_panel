@@ -129,8 +129,21 @@ namespace rdp
             int api = static_cast<int>(supported_.at(row));
             variant.setValue(api);
         }
+        else if (role == kNameRole)
+        {
+            variant.setValue(GetName(supported_.at(row)));
+        }
+        else if (role == kApiRole)
+        {
+            variant.setValue(static_cast<int>(supported_.at(row)));
+        }
 
         return variant;
+    }
+
+    QHash<int, QByteArray> ApiModel::roleNames() const
+    {
+        return {{kNameRole, "name"}, {kApiRole, "api"}};
     }
 
     int ApiModel::rowCount(const QModelIndex& parent) const

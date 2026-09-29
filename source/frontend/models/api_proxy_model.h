@@ -37,6 +37,19 @@ namespace rdp
         /// @param [in] source_model The source model that this proxy should use.
         void SetSourceApiModel(std::shared_ptr<ApiModel> source_model);
 
+        /// @brief The roles the QML front-end binds to, on top of the source model's.
+        enum ApiProxyRoles : int
+        {
+            // Named "apiEnabled" in QML: a role called "enabled" would shadow Item::enabled.
+            kEnabledRole = Qt::UserRole + 100,  ///< Whether the API is usable with the enabled modules.
+            kTooltipRole                        ///< Why the API is unusable, empty when it is usable.
+        };
+        Q_ENUM(ApiProxyRoles)
+
+        /// @brief QIdentityProxyModel::roleNames() override.
+        /// @return The source model's role names plus this proxy's own.
+        QHash<int, QByteArray> roleNames() const override;
+
         /// @brief Returns the data for the index, adding a tooltip if an item is disabled.
         /// @param [in] index The index to query data for.
         /// @param [in] role The data role.

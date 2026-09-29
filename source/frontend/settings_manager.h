@@ -38,13 +38,12 @@ namespace rdp
         /// @brief Save settings.
         void SaveSettings() const;
 
-        /// @brief Applies the color theme
+        /// @brief Applies the color theme.
+        ///
+        /// The QML front-end themes itself from Rdp.Theme; this keeps QtCommon's ColorTheme
+        /// and the application palette in step for the module code that still reads them.
         /// @param [in] option The color theme
         void ApplyColorThemeOption(ColorThemeOption option);
-
-        /// @brief Applies the stylesheet for theme option
-        /// @param [in] color_theme The color theme option
-        void ApplyStyleSheet(ColorThemeOption color_theme);
 
         /// @brief Gets the active color theme option
         /// @return color theme option
@@ -68,8 +67,6 @@ namespace rdp
         /// @return palette for current theme
         [[nodiscard]] QPalette GetCurrentPalette() const;
 
-        QString                    light_style_sheet_;   ///< Light mode style sheet
-        QString                    dark_style_sheet_;    ///< Datk mode style sheet
         std::unique_ptr<QSettings> settings_ = nullptr;  ///< Settings storage.
 
         constexpr static char const* kSettingsFileName = "settings.ini";  ///< Settings filename.

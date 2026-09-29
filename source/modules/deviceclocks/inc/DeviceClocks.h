@@ -24,6 +24,9 @@ public:
     /// @param [in] api_registry The API registry to use for this module
     explicit DeviceClocksDevToolsModule(DDApiRegistry* api_registry);
 
+    /// @brief Destructor. Out of line so the view model only has to be complete in the .cpp.
+    ~DeviceClocksDevToolsModule() override;
+
 protected:
     /// @brief Initializes the module.
     /// @param [in] tool_settings The tool settings.
@@ -31,16 +34,21 @@ protected:
     DD_RESULT Initialize(QSettings* tool_settings) override;
 
 public:
-    /// @brief Creates a new device clocks view.
-    /// @return A new device clocks view.
-    [[nodiscard]] QWidget* CreateView() const override;
+    /// @brief Gets the QML component that renders the device clocks view.
+    /// @return The URL of the module's QML view.
+    [[nodiscard]] QUrl GetQmlViewUrl() const override;
+
+    /// @brief Gets the view model the device clocks view binds to.
+    /// @return The module's view model.
+    [[nodiscard]] QObject* GetViewModel() const override;
 
     /// @brief Returns the module category.
     /// @return ModuleCategory::kSystem since device clocks operates system-wide.
     [[nodiscard]] ModuleCategory GetModuleCategory() const override;
 
 private:
-    std::shared_ptr<class DeviceClocksModel> clocks_model_;  ///< The clocks model.
+    std::shared_ptr<class DeviceClocksModel>     clocks_model_;  ///< The model that talks to the device clocks manager.
+    std::unique_ptr<class DeviceClocksViewModel> view_model_;    ///< The model the QML view binds to.
 };
 
 DD_DECLARE_MODULE_LOAD_API(DeviceClocks);

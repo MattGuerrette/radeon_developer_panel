@@ -74,6 +74,10 @@ namespace rdp
         /// @return The data at the given index for the given role.
         QVariant data(const QModelIndex& index, int role) const override;
 
+        /// @brief QAbstractItemModel::roleNames() override.
+        /// @return The role names the QML front-end binds to.
+        QHash<int, QByteArray> roleNames() const override;
+
     private:
         std::mutex unique_values_mutex_;  ///< The lock that guards the filters.
 
@@ -180,6 +184,12 @@ namespace rdp
     {
         Q_UNUSED(parent);
         return 1;
+    }
+
+    template <typename T>
+    QHash<int, QByteArray> AvailableLoggingFiltersModel<T>::roleNames() const
+    {
+        return {{Qt::DisplayRole, "name"}};
     }
 
     template <typename T>

@@ -7,6 +7,8 @@
 
 #include "Raytracing.h"
 
+#include <common/inc/model/capture_view_model.h>
+
 #include <dd_driver_utils_api.h>
 #include <dd_uber_trace_api.h>
 
@@ -76,6 +78,10 @@ DD_RESULT RaytracingDevToolsModule::Initialize(QSettings* tool_settings)
 
     base_trace_source_view_model_ = view_model_;
 
+    qml_view_model_ = std::make_unique<CaptureViewModel>(view_model_,
+                                                        userdata_view_model_,
+                                                        [this] { view_model_->RequestBeginTrace(); });
+
     return connection_manager_v2_->Initialize(trace_source_) ? DD_RESULT_SUCCESS : DD_RESULT_UNKNOWN;
 }
 
@@ -103,16 +109,16 @@ bool RaytracingDevToolsModule::Disable()
     return result == DD_RESULT_SUCCESS;
 }
 
-QWidget* RaytracingDevToolsModule::CreateView() const
+RaytracingDevToolsModule::~RaytracingDevToolsModule() = default;
+
+QUrl RaytracingDevToolsModule::GetQmlViewUrl() const
 {
-    auto* utility_view = new RaytracingUserdataView();
+    return QUrl("qrc:/qt/qml/Rdp/Modules/Raytracing/RaytracingView.qml");
+}
 
-    auto* view = new RaytracingView(utility_view, view_model_, userdata_view_model_);
-    view->SetUserdataViewModel(userdata_view_model_);
-
-    utility_view->SetModel(userdata_view_model_);
-
-    return view;
+QObject* RaytracingDevToolsModule::GetViewModel() const
+{
+    return qml_view_model_.get();
 }
 
 bool RaytracingDevToolsModule::IsCompatibleWithApi(const devtrace::Api api) const

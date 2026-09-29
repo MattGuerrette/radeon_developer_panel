@@ -9,17 +9,13 @@
 
 #include <QAbstractEventDispatcher>
 #include <QCommandLineParser>
-#include <QKeyEvent>
 #include <QProcess>
-#include <QStyleHints>
-
-#ifdef Q_OS_MACOS
-#include <QStyleFactory>
-#endif
+#include <QQmlApplicationEngine>
+#include <QQuickStyle>
+#include <QQuickWindow>
 
 #include <common/inc/global_shortcut_manager.h>
 #include <common/inc/single_application_instance.h>
-#include <QStyleFactory>
 
 #ifdef Q_OS_WIN
 #include <common/inc/system_keyboard_hook.h>
@@ -29,10 +25,10 @@
 #include "crash/crash_notify.h"
 #include "definitions.h"
 #include "logging/logging_manager.h"
-#include "mainwindow.h"
 #include "models/connection_model.h"
 #include "models/module_model.h"
 #include "models/timeout_model.h"
+#include "qml/Rdp/Backend/backend.h"
 #include "settings_manager.h"
 #include "utilities.h"
 
@@ -58,10 +54,12 @@ namespace rdp
         {
             setWindowIcon(QIcon(":/RDP_Icon.ico"));
 #ifdef _WIN32
-            SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);
+            SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
 #endif
 
-            setStyle(QStyleFactory::create("fusion"));
+            // Fusion is the only built-in Qt Quick Controls style that honours a custom
+            // palette on every control, which is what Rdp.Theme relies on.
+            QQuickStyle::setStyle(QStringLiteral("Fusion"));
             util::SetCurrentThreadName("Qt UI");
 
             LoggingManager::Instance().Initialize();
@@ -128,19 +126,38 @@ namespace rdp
                     SystemKeyboardHook::GetInstance().Connect();
 #endif
 
-                    // Create the main window for the whole application.
-                    std::unique_ptr<MainWindow> main_window(new (std::nothrow)
-                                                                MainWindow(module_model, timeout_model, connection_model, system_info_model, settings_manager));
+                    // The single object the QML front-end binds to. It has to be filled in
+                    // before the engine resolves Rdp.Backend, since QML binds to it directly.
+                    Backend& backend = Backend::Instance();
+                    backend.Initialize(settings_manager, module_model, timeout_model, connection_model, system_info_model);
+
+                    QQmlApplicationEngine engine;
+                    connect(
+                        &engine,
+                        &QQmlApplicationEngine::objectCreationFailed,
+                        this,
+                        [] { QCoreApplication::exit(-1); },
+                        Qt::QueuedConnection);
+
+                    engine.loadFromModule("Rdp", "Main");
+
+                    if (engine.rootObjects().isEmpty())
+                    {
+                        RDP_LOG_ERROR("Failed to load the QML front-end.");
+                        return false;
+                    }
+
+                    auto* window = qobject_cast<QQuickWindow*>(engine.rootObjects().constFirst());
 
                     connect(timeout_model.get(), &TimeoutModel::TimeoutsChanged, [&] {
                         needs_restart = true;
-                        main_window->close();
+                        if (window != nullptr)
+                        {
+                            window->close();
+                        }
                     });
 
-                    connect(this, &SingleApplicationInstance::AppInstanceStarted, main_window.get(), &MainWindow::BringToForeground);
-
-                    // Show the window after settings loaded
-                    main_window->show();
+                    connect(this, &SingleApplicationInstance::AppInstanceStarted, this, [window] { BringToForeground(window); });
 
                     // If the target parameter is used, try to connect to the target.
                     // Otherwise, try and connect to the last connection we used.
@@ -148,16 +165,16 @@ namespace rdp
                     //      this will silently do nothing and let the app start.
                     // If we find a connection to use and fail to connect,
                     //      this will have gone through the usual channels for a connection with signals
-                    //      and produce a message box on failure to connect.
-                    // This call is predicated on a checkbox visible in ConnectionWidget.
+                    //      and produce a message overlay on failure to connect.
+                    // This call is predicated on a checkbox visible on the CONNECTION page.
 
                     if (parser.isSet("c"))
                     {
-                        main_window->AttemptNewRemoteConnection(parser.value("c"));
+                        backend.AttemptNewRemoteConnection(parser.value("c"));
                     }
                     else
                     {
-                        main_window->AttemptAutoConnection();
+                        backend.AttemptAutoConnection();
                     }
 
                     // Run the actual application and invoke Qt event handler
@@ -167,9 +184,8 @@ namespace rdp
                     SystemKeyboardHook::GetInstance().Disconnect();
 #endif
 
+                    backend.Shutdown();
                     settings_manager->SaveSettings();
-
-                    main_window.reset();
 
                     connection_model->ShutDown();
                 }
@@ -181,6 +197,25 @@ namespace rdp
             }
 
             return result;
+        }
+
+    private:
+        /// @brief Raises the application window above the other windows on the desktop.
+        /// @param [in] window The main window.
+        static void BringToForeground(QQuickWindow* window)
+        {
+            if (window == nullptr)
+            {
+                return;
+            }
+
+            if (window->windowState() & Qt::WindowMinimized)
+            {
+                window->showNormal();
+            }
+
+            window->raise();
+            window->requestActivate();
         }
     };
 }  // namespace rdp

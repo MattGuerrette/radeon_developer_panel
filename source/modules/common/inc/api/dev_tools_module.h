@@ -13,7 +13,8 @@
 #include <mutex>
 #include <string>
 
-#include <QWidget>
+#include <QObject>
+#include <QUrl>
 
 #include <ddApi.h>
 
@@ -236,11 +237,20 @@ protected:
     virtual bool Disable();
 
 public:
-    /// @brief Creates a module's view.
+    /// @brief Gets the QML component that renders this module's view.
     ///
-    /// Memory for the model will be managed by the caller, and this should be able to be called multiple times without issues.
-    /// @return A new view for this module.
-    [[nodiscard]] virtual QWidget* CreateView() const = 0;
+    /// The component is instantiated by the front-end, which sets its "viewModel" property
+    /// to GetViewModel(). Each module publishes its view as its own QML module, so the URL
+    /// is of the form "qrc:/qt/qml/Rdp/Modules/<Name>/<Name>View.qml".
+    /// @return The URL of the module's QML view.
+    [[nodiscard]] virtual QUrl GetQmlViewUrl() const = 0;
+
+    /// @brief Gets the view model that the module's QML view binds to.
+    ///
+    /// The module owns the view model and it lives as long as the module does, so the view
+    /// can be created and destroyed as often as the front-end likes.
+    /// @return The module's view model, or nullptr before the module has initialized.
+    [[nodiscard]] virtual QObject* GetViewModel() const = 0;
 
     /// Sets the name of the application that is displayed in views for this module.
     /// @param [in] application_name The name of the application to display in views for this module.

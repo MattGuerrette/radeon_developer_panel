@@ -29,7 +29,17 @@ namespace rdp
             return mode;
         }
 
+        if (role == kNameRole)
+        {
+            return GetOptionName(mode);
+        }
+
         return {};
+    }
+
+    QHash<int, QByteArray> AutoConnectModel::roleNames() const
+    {
+        return {{kNameRole, "name"}};
     }
 
     QString AutoConnectModel::GetOptionName(const ApplicationAutoConnectMode mode)

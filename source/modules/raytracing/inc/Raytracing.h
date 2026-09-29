@@ -25,6 +25,9 @@ public:
     /// @param [in] api_registry The API registry to use for this module
     explicit RaytracingDevToolsModule(DDApiRegistry* api_registry);
 
+    /// @brief Destructor. Out of line so the view model only has to be complete in the .cpp.
+    ~RaytracingDevToolsModule() override;
+
 protected:
     /// @brief Initializes the module.
     /// @param [in] tool_settings The tool settings.
@@ -42,7 +45,13 @@ protected:
 public:
     /// @brief Creates a new raytracing view.
     /// @return A new memory trace view.
-    [[nodiscard]] QWidget* CreateView() const override;
+    /// @brief Gets the QML component that renders this module's view.
+    /// @return The URL of the module's QML view.
+    [[nodiscard]] QUrl GetQmlViewUrl() const override;
+
+    /// @brief Gets the view model the module's QML view binds to.
+    /// @return The module's view model.
+    [[nodiscard]] QObject* GetViewModel() const override;
 
     /// @brief Returns whether Raytracing is compatible with the given API.
     /// @param [in] api The API to check module compatibility against.
@@ -50,6 +59,8 @@ public:
     [[nodiscard]] bool IsCompatibleWithApi(devtrace::Api api) const override;
 
 private:
+    std::unique_ptr<class CaptureViewModel> qml_view_model_;  ///< The model the QML view binds to.
+
     std::shared_ptr<devtrace::RraTraceSource>          trace_source_;         ///< The trace source.
     std::shared_ptr<class RaytracingViewModel>         view_model_;           ///< The raytracing view model.
     std::shared_ptr<class RaytracingUserdataViewModel> userdata_view_model_;  ///< The raytracing userdata view model.

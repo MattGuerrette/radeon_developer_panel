@@ -46,6 +46,14 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/source/version.h.in" "${CMAKE_CURREN
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 if (NOT HEADLESS)
     include(devtools_qt_helper)
+
+    # QML modules are defined under both source/modules and source/frontend, and the two
+    # have to agree on the resource prefix, so the policies are set once for the project.
+    qt_policy(SET QTP0001 NEW)  # QML modules default to the /qt/qml resource prefix
+    qt_policy(SET QTP0005 NEW)  # IMPORTS/DEPENDENCIES accept "TARGET <cmake-target>"
+
+    # Emit .qmlls.ini so the QML language server resolves the project's own modules.
+    set(QT_QML_GENERATE_QMLLS_INI ON)
 endif (NOT HEADLESS)
 
 # The sample apps are output in the same folder as the integration tests so they can use a

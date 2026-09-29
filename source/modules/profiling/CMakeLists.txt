@@ -9,6 +9,9 @@ set(CMAKE_AUTORCC ON)
 
 set(DEVTOOLS_MODULE_FOLDER "DevTools Modules/Profiling")
 
+### QML view #########################################################################################################
+add_subdirectory(qml/Rdp/Modules/Profiling)
+
 ### Module Core #######################################################################################################
 add_library(DevToolsProfilingModule STATIC)
 devtools_target_options(DevToolsProfilingModule)
@@ -24,7 +27,9 @@ target_link_libraries(DevToolsProfilingModule
         DevToolsCommonStatic
         QtCustomWidgets
         QtUtils
-        Qt::Widgets
+        rdp_controls
+        rdp_module_profiling
+        Qt::Quick
         LibDevTrace
         gpa_counters_headers
 )
@@ -46,15 +51,13 @@ target_sources(DevToolsProfilingModule PRIVATE
         src/gui/profiling_module_definitions.h
         src/gui/profiling_prelaunch_settings_helper.cpp
         src/gui/profiling_prelaunch_settings_helper.h
-        src/gui/profiling_view.h
+        src/gui/profiling_capture_view_model.h
+        src/gui/profiling_capture_view_model.cpp
         src/gui/profiling_view_model.h
         src/gui/spm_counter_file_parser.h
         src/gui/profiling_userdata_view_model.h
         src/gui/profiling_userdata_view_model.cpp
-        src/gui/profiling_view.cpp
         src/gui/profiling_view_model.cpp
-        src/gui/profiling_userdata_view.h
-        src/gui/profiling_userdata_view.cpp
         src/gui/rgp_file_validator.h
         src/gui/rgp_file_validator.cpp
         src/Profiling.cpp

@@ -9,6 +9,9 @@ set(CMAKE_AUTORCC ON)
 
 set(DEVTOOLS_MODULE_FOLDER "DevTools Modules/Raytracing")
 
+### QML view #########################################################################################################
+add_subdirectory(qml/Rdp/Modules/Raytracing)
+
 add_library(DevToolsRaytracingModule STATIC)
 
 devtools_target_options(DevToolsRaytracingModule)
@@ -24,7 +27,9 @@ target_link_libraries(DevToolsRaytracingModule
         amdrdf
         QtCustomWidgets
         QtUtils
-        Qt::Widgets
+        rdp_controls
+        rdp_module_raytracing
+        Qt::Quick
         LibDevTrace
 )
 

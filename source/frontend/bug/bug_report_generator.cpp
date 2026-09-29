@@ -10,13 +10,12 @@
 #include <qconfig.h>
 #include <QApplication>
 #include <QClipboard>
-#include <QMessageBox>
 #include <QResource>
 #include <utility>
 
 #include <ddRouter.h>
 
-#include <qt_common/custom_widgets/message_overlay.h>
+#include "notifications.h"
 
 #include <common/inc/api/dev_tools_module.h>
 
@@ -76,7 +75,7 @@ namespace rdp
         QString report = GenerateReport(report_details);
         QApplication::clipboard()->setText(report);
 
-        MessageOverlay::InfoAsync("Bug Report", kReportCopiedMessage);
+        Notifications::Info("Bug Report", kReportCopiedMessage);
     }
 
     void BugReportGenerator::FillBugReport(BugReport& report) const

@@ -90,6 +90,19 @@ namespace rdp
         /// @brief Called when the current system information changes for any reason.
         void OnSystemInfoChanged();
 
+    public:
+        /// @brief The roles the QML front-end binds to.
+        enum ApiModelRoles : int
+        {
+            kNameRole = Qt::UserRole + 1,  ///< The API's display name.
+            kApiRole,                      ///< The API enumerator, as an int.
+        };
+        Q_ENUM(ApiModelRoles)
+
+        /// @brief QAbstractListModel::roleNames() override.
+        /// @return The role names the QML front-end binds to.
+        QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
+
     protected:
         /// @brief QAbstractListModel::data() implementation
         /// @param [in] index The index to query data for

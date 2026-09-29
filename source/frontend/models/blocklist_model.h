@@ -65,6 +65,10 @@ namespace rdp
         /// @return true if blocked, false otherwise
         bool Contains(const QString& name) const;
 
+        /// @brief Gets the platform whose blocklist is currently in effect.
+        /// @return The platform, kUnknown until the system information has loaded.
+        [[nodiscard]] Platform GetPlatform() const;
+
     private:
         /// @brief Checks if specified name is in blocklist for the platform.
         /// @param [in] name The name.
@@ -73,6 +77,26 @@ namespace rdp
         bool Contains(const QString& name, Platform platform) const;
 
     public:
+        /// @brief The roles the QML front-end binds to.
+        enum BlocklistRoles : int
+        {
+            kNameRole = Qt::UserRole + 1,  ///< The blocked executable's name.
+        };
+        Q_ENUM(BlocklistRoles)
+
+        /// @brief QAbstractListModel::roleNames() override.
+        /// @return The role names the QML front-end binds to.
+        QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
+
+        /// @brief Renames the blocklist entry in the given row.
+        /// @param [in] row The row to rename.
+        /// @param [in] name The new name.
+        Q_INVOKABLE void RenameAtRow(int row, const QString& name);
+
+        /// @brief Removes the blocklist entry in the given row.
+        /// @param [in] row The row to remove.
+        Q_INVOKABLE void RemoveAtRow(int row);
+
         /// @brief QAbstractListModel::data() implementation
         /// @param [in] index The index to query data for
         /// @param [in] role The data role

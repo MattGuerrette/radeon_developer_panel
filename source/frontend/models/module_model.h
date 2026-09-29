@@ -238,6 +238,37 @@ namespace rdp
             kModuleModelColumnsCount             ///< The total number of columns.
         };
 
+        /// @brief The roles the QML front-end binds to.
+        ///
+        /// The columns above stay as they are: a role reads the same value the matching
+        /// column does, so both views of the model agree.
+        enum ModuleModelRoles : int
+        {
+            kDisplayNameRole = Qt::UserRole + 1,  ///< The module's display name.
+            kEnabledRole,                         ///< Whether the module is enabled. Named "moduleEnabled" in QML: a role called
+                                                  ///< "enabled" would shadow Item::enabled in the delegate.
+            kIncompatibleRole,                    ///< Whether the module conflicts with an enabled module.
+            kIncompatibilityReasonRole,           ///< Why the module conflicts, empty when it does not.
+            kIsSystemModuleRole,                  ///< Whether the module belongs in the SYSTEM view rather than CAPTURE.
+            kModuleNameRole,                      ///< The module's internal (non-display) name.
+            kQmlViewUrlRole,                      ///< The QML component that renders the module's view.
+            kViewModelRole                        ///< The object that component binds to, owned by the module.
+        };
+        Q_ENUM(ModuleModelRoles)
+
+        /// @brief QAbstractItemModel::roleNames() override.
+        /// @return The role names the QML front-end binds to.
+        QHash<int, QByteArray> roleNames() const override;
+
+        /// @brief Enables or disables the module in the given row.
+        /// @param [in] row The row of the module.
+        /// @param [in] is_enabled true to enable the module.
+        Q_INVOKABLE void SetModuleEnabledAtRow(int row, bool is_enabled);
+
+        /// @brief Resets the module in the given row to its default settings.
+        /// @param [in] row The row of the module.
+        Q_INVOKABLE void ResetModuleAtRow(int row);
+
         // QAbstractItemModel
 
         /// @brief Gets the index at the specified row and column with the given parent.

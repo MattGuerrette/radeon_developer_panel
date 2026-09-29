@@ -7,6 +7,8 @@
 
 #include "Profiling.h"
 
+#include "gui/profiling_capture_view_model.h"
+
 #include <dd_driver_utils_api.h>
 #include <dd_uber_trace_api.h>
 
@@ -23,9 +25,7 @@
 
 #include "common/inc/definitions.h"
 #include "gui/profiling_prelaunch_settings_helper.h"
-#include "gui/profiling_userdata_view.h"
 #include "gui/profiling_userdata_view_model.h"
-#include "gui/profiling_view.h"
 
 DD_RESULT DDModuleLoad_Profiling(DDApiRegistry* pApiRegistry)
 {
@@ -99,7 +99,16 @@ DD_RESULT ProfilingDevToolsModule::Initialize(QSettings* tool_settings)
         std::make_shared<ProfilingViewModel>(stream_provider, trace_source_, file_utils, file_opener, tool_settings, userdata_view_model_, timer, logger);
     base_trace_source_view_model_ = view_model_;
 
-    return connection_manager_v2_->Initialize(trace_source_) ? DD_RESULT_SUCCESS : DD_RESULT_UNKNOWN;
+    auto qml_view_model = std::make_unique<ProfilingCaptureViewModel>(view_model_, userdata_view_model_);
+
+    const bool initialized = connection_manager_v2_->Initialize(trace_source_);
+
+    // Bound after the connection manager is up, so the first status the view sees is the
+    // one the trace source actually reports.
+    qml_view_model->Bind();
+    qml_view_model_ = std::move(qml_view_model);
+
+    return initialized ? DD_RESULT_SUCCESS : DD_RESULT_UNKNOWN;
 }
 
 bool ProfilingDevToolsModule::Enable()
@@ -126,15 +135,16 @@ bool ProfilingDevToolsModule::Disable()
     return result == DD_RESULT_SUCCESS;
 }
 
-QWidget* ProfilingDevToolsModule::CreateView() const
+ProfilingDevToolsModule::~ProfilingDevToolsModule() = default;
+
+QUrl ProfilingDevToolsModule::GetQmlViewUrl() const
 {
-    const auto utility_view = new ProfilingUserdataView();
+    return QUrl("qrc:/qt/qml/Rdp/Modules/Profiling/ProfilingView.qml");
+}
 
-    const auto view = new ProfilingView(utility_view, view_model_, userdata_view_model_);
-    view->SetUserdataViewModel(userdata_view_model_);
-
-    utility_view->SetModel(userdata_view_model_);
-    return view;
+QObject* ProfilingDevToolsModule::GetViewModel() const
+{
+    return qml_view_model_.get();
 }
 
 bool ProfilingDevToolsModule::IsCompatibleWithApi(devtrace::Api api) const

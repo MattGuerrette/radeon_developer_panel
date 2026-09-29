@@ -408,13 +408,33 @@ namespace rdp
         const int row = index.row();
         if (platform_ != Platform::kUnknown)
         {
-            if (role == Qt::DisplayRole || role == Qt::EditRole)
+            if (role == Qt::DisplayRole || role == Qt::EditRole || role == kNameRole)
             {
                 return blocklists_.at(platform_).at(row);
             }
         }
 
         return {};
+    }
+
+    BlocklistModel::Platform BlocklistModel::GetPlatform() const
+    {
+        return platform_;
+    }
+
+    QHash<int, QByteArray> BlocklistModel::roleNames() const
+    {
+        return {{kNameRole, "name"}};
+    }
+
+    void BlocklistModel::RenameAtRow(const int row, const QString& name)
+    {
+        setData(index(row, 0, {}), name, Qt::EditRole);
+    }
+
+    void BlocklistModel::RemoveAtRow(const int row)
+    {
+        removeRows(row, 1, {});
     }
 
     Qt::ItemFlags BlocklistModel::flags(const QModelIndex& index) const

@@ -9,6 +9,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
+### QML view ##########################################################################################################
+add_subdirectory(qml/Rdp/Modules/DeviceClocks)
+
 ### Module ############################################################################################################
 add_library(DevToolsDeviceClocksModule STATIC)
 devtools_target_options(DevToolsDeviceClocksModule)
@@ -25,7 +28,8 @@ target_link_libraries(DevToolsDeviceClocksModule
         QtCustomWidgets
         QtUtils
         LibDevTrace
-        Qt::Widgets
+        rdp_controls
+        Qt::Quick
 )
 
 target_include_directories(DevToolsDeviceClocksModule
@@ -40,16 +44,12 @@ target_include_directories(DevToolsDeviceClocksModule
 target_sources(DevToolsDeviceClocksModule PRIVATE
         src/gui/clock_mode_model.h
         src/gui/clock_mode_model.cpp
-        src/gui/clock_mode_widget.h
-        src/gui/clock_mode_widget.cpp
-        src/gui/clock_mode_widget.ui
         src/gui/device_clocks_gpu_model.h
         src/gui/device_clocks_gpu_model.cpp
-        src/gui/device_clocks_view.h
-        src/gui/device_clocks_view.cpp
         src/gui/device_clocks_model.h
         src/gui/device_clocks_model.cpp
-        src/gui/device_clocks_view.ui
+        src/gui/device_clocks_view_model.h
+        src/gui/device_clocks_view_model.cpp
         src/DeviceClocks.cpp
         PUBLIC
         inc/DeviceClocks.h

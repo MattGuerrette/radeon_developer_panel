@@ -34,6 +34,17 @@ public:
     /// @return The connection id at the given index.
     uint16_t GetConnectionIdForIndex(int index) const;
 
+    /// @brief The roles the capture target selector binds to.
+    enum Roles : int
+    {
+        kNameRole = Qt::UserRole + 1,  ///< The connection's description.
+    };
+    Q_ENUM(Roles)
+
+    /// @brief QAbstractItemModel::roleNames() override.
+    /// @return The role names the capture target selector binds to.
+    QHash<int, QByteArray> roleNames() const override;
+
     /// @brief QAbstractListModel::data() implementation
     /// @param [in] index The index to query data for
     /// @param [in] role The data role

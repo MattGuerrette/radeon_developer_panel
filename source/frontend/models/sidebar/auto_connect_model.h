@@ -24,6 +24,17 @@ namespace rdp
         /// @param [in] parent The parent object for this model.
         explicit AutoConnectModel(QObject* parent = nullptr);
 
+        /// @brief The roles the QML front-end binds to.
+        enum AutoConnectRoles : int
+        {
+            kNameRole = Qt::UserRole + 1,  ///< The mode's display name.
+        };
+        Q_ENUM(AutoConnectRoles)
+
+        /// @brief QAbstractItemModel::roleNames() override.
+        /// @return The role names the QML front-end binds to.
+        QHash<int, QByteArray> roleNames() const override;
+
         /// @brief QAbstractListModel::data() implementation
         /// @param [in] index The index to query data for
         /// @param [in] role The data role

@@ -86,6 +86,7 @@ target_sources(DevToolsCommonStatic PRIVATE
         inc/model/qt_trace_io.h
         inc/model/qt_trace_timer.h
         inc/model/trace_file_opener.h
+        inc/model/capture_view_model.h
         inc/model/trace_source_view_model.h
         inc/model/recent_trace_model_base.h
         inc/model/utility/base_userdata_view_model.h
@@ -124,6 +125,7 @@ target_sources(DevToolsCommonStatic PRIVATE
         src/focus_notification_line_edit.cpp
         src/capture_progress_widget.cpp
         src/collapsible_pane.cpp
+        src/model/capture_view_model.cpp
         src/model/trace_source_view_model.cpp
         src/model/recent_trace_model_base.cpp
         src/model/utility/userdata_view_model.cpp

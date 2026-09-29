@@ -14,7 +14,7 @@
 #include <system_info_cache.h>
 
 #include "gui/device_clocks_model.h"
-#include "gui/device_clocks_view.h"
+#include "gui/device_clocks_view_model.h"
 
 // ReSharper disable once CppInconsistentNaming
 // ReSharper disable once CppParameterNamesMismatch
@@ -48,16 +48,21 @@ DD_RESULT DeviceClocksDevToolsModule::Initialize(QSettings* tool_settings)
 
     auto system_info_cache = std::make_shared<devtrace::SystemInfoCache>(router_utils_api_);
     clocks_model_          = std::make_shared<DeviceClocksModel>(device_clocks_manager_);
+    view_model_            = std::make_unique<DeviceClocksViewModel>(clocks_model_);
 
     return DD_RESULT_SUCCESS;
 }
 
-QWidget* DeviceClocksDevToolsModule::CreateView() const
-{
-    const auto view = new DeviceClocksView();
-    view->SetModel(clocks_model_);
+DeviceClocksDevToolsModule::~DeviceClocksDevToolsModule() = default;
 
-    return view;
+QUrl DeviceClocksDevToolsModule::GetQmlViewUrl() const
+{
+    return QUrl("qrc:/qt/qml/Rdp/Modules/DeviceClocks/DeviceClocksView.qml");
+}
+
+QObject* DeviceClocksDevToolsModule::GetViewModel() const
+{
+    return view_model_.get();
 }
 
 ModuleCategory DeviceClocksDevToolsModule::GetModuleCategory() const

@@ -42,13 +42,36 @@ namespace rdp
         connect(source_api_model_.get(), &ApiModel::ApiCountChanged, this, &ApiProxyModel::SourceApiCountChanged);
     }
 
+    QHash<int, QByteArray> ApiProxyModel::roleNames() const
+    {
+        QHash<int, QByteArray> names = QIdentityProxyModel::roleNames();
+        names.insert(kEnabledRole, "apiEnabled");
+        names.insert(kTooltipRole, "tooltip");
+
+        return names;
+    }
+
     QVariant ApiProxyModel::data(const QModelIndex& index, int role) const
     {
-        if (role == Qt::ToolTipRole)
+        // flags() reads this model back, so is_enabled is only computed for the roles that
+        // actually need it; asking for it up front would recurse through Qt::UserRole.
+        if (role == kEnabledRole)
+        {
+            return (index.flags() & Qt::ItemIsEnabled) != 0;
+        }
+
+        // QML has no equivalent of Qt::ItemIsEnabled, so the reason an API is greyed out is
+        // published as a role of its own as well as as a tooltip.
+        if (role == Qt::ToolTipRole || role == kTooltipRole)
         {
             if ((index.flags() & Qt::ItemIsEnabled) == 0)
             {
-                return {"This API is not supported by the currently enabled features."};
+                return QObject::tr("This API is not supported by the currently enabled features.");
+            }
+
+            if (role == kTooltipRole)
+            {
+                return QString();
             }
         }
 
@@ -59,7 +82,9 @@ namespace rdp
     {
         const Qt::ItemFlags base_flags = QIdentityProxyModel::flags(index);
 
-        const auto api          = static_cast<ApiModel::Api>(index.data(Qt::UserRole).toInt());
+        // Qualified, so it does not dispatch back into this class's data() override, which
+        // asks flags() about the very same index.
+        const auto api          = static_cast<ApiModel::Api>(QIdentityProxyModel::data(index, Qt::UserRole).toInt());
         const auto devtrace_api = static_cast<devtrace::Api>(api);
 
         if (api != ApiModel::Api::kWorkflowSupported && !module_model_->IsApiSupportedByEnabledModules(devtrace_api))

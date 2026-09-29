@@ -7,6 +7,8 @@
 
 #include "CrashAnalysis.h"
 
+#include <common/inc/model/capture_view_model.h>
+
 #include <dd_driver_utils_api.h>
 #include <dd_enhanced_crash_info_api.h>
 #include <dd_gpu_detective_api.h>
@@ -108,6 +110,10 @@ DD_RESULT CrashAnalysisDevToolsModule::Initialize(QSettings* tool_settings)
         std::make_shared<CrashAnalysisViewModel>(stream_provider, trace_source_, file_utils, file_opener, userdata_view_model_, tool_settings, logger);
     base_trace_source_view_model_ = crash_analysis_model_;
 
+    // Crash Analysis captures when the driver reports a crash, not on request, so it
+    // supplies no capture action and its view offers no capture control.
+    qml_view_model_ = std::make_unique<CaptureViewModel>(crash_analysis_model_, userdata_view_model_, std::function<void()>{});
+
     return connection_manager_v2_->Initialize(trace_source_) ? DD_RESULT_SUCCESS : DD_RESULT_UNKNOWN;
 }
 
@@ -135,15 +141,16 @@ bool CrashAnalysisDevToolsModule::Disable()
     return result == DD_RESULT_SUCCESS;
 }
 
-QWidget* CrashAnalysisDevToolsModule::CreateView() const
+CrashAnalysisDevToolsModule::~CrashAnalysisDevToolsModule() = default;
+
+QUrl CrashAnalysisDevToolsModule::GetQmlViewUrl() const
 {
-    const auto userdata_view = new CrashAnalysisUserdataView();
-    userdata_view->SetModel(userdata_view_model_);
+    return QUrl("qrc:/qt/qml/Rdp/Modules/CrashAnalysis/CrashAnalysisView.qml");
+}
 
-    const auto view = new CrashAnalysisView(userdata_view, crash_analysis_model_);
-    view->SetUserdataViewModel(userdata_view_model_);
-
-    return view;
+QObject* CrashAnalysisDevToolsModule::GetViewModel() const
+{
+    return qml_view_model_.get();
 }
 
 bool CrashAnalysisDevToolsModule::IsCompatibleWithApi(const devtrace::Api api) const

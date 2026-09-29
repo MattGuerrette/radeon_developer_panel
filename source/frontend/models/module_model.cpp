@@ -347,11 +347,13 @@ namespace rdp
         {
             emit ModuleStatusChanged(mutable_module, is_enabled);
 
-            const QModelIndex enabled_index = index(module_index, kModuleModelColumnsEnabled, {});
-            emit              dataChanged(enabled_index, enabled_index);
+            // Span every column of the row: QML binds through roles on column 0, so a
+            // change signalled only for the Enabled column would not reach it.
+            emit dataChanged(index(module_index, 0, {}), index(module_index, kModuleModelColumnsCount - 1, {}));
 
-            const QModelIndex compatibility_start = index(0, kModuleModelColumnsIncompatible, {});
-            const QModelIndex compatibility_end   = index(static_cast<int>(modules_.size()) - 1, kModuleModelColumnsIncompatible, {});
+            // Enabling one module can make any other incompatible, so refresh them all.
+            const QModelIndex compatibility_start = index(0, 0, {});
+            const QModelIndex compatibility_end   = index(static_cast<int>(modules_.size()) - 1, kModuleModelColumnsCount - 1, {});
             emit              dataChanged(compatibility_start, compatibility_end);
         }
         else
@@ -496,9 +498,58 @@ namespace rdp
             return DisplayData(module, index.column());
         case Qt::ToolTipRole:
             return TooltipData(module, index.column());
+        case kDisplayNameRole:
+            return DisplayData(module, kModuleModelColumnsDisplayName);
+        case kEnabledRole:
+            return DisplayData(module, kModuleModelColumnsEnabled);
+        case kIncompatibleRole:
+            return DisplayData(module, kModuleModelColumnsIncompatible);
+        case kIncompatibilityReasonRole:
+            return TooltipData(module, index.column());
+        case kIsSystemModuleRole:
+            return module->GetModuleCategory() == ModuleCategory::kSystem;
+        case kModuleNameRole:
+            return module->GetModuleName().c_str();
+        case kQmlViewUrlRole:
+            return module->GetQmlViewUrl();
+        case kViewModelRole:
+            // The module owns the view model, so QML must not take it over.
+            return QVariant::fromValue(module->GetViewModel());
         default:
             return {};
         }
+    }
+
+    QHash<int, QByteArray> ModuleModel::roleNames() const
+    {
+        return {{kDisplayNameRole, "displayName"},
+                {kEnabledRole, "moduleEnabled"},
+                {kIncompatibleRole, "incompatible"},
+                {kIncompatibilityReasonRole, "incompatibilityReason"},
+                {kIsSystemModuleRole, "isSystemModule"},
+                {kModuleNameRole, "moduleName"},
+                {kQmlViewUrlRole, "qmlViewUrl"},
+                {kViewModelRole, "viewModel"}};
+    }
+
+    void ModuleModel::SetModuleEnabledAtRow(const int row, const bool is_enabled)
+    {
+        if (row < 0 || row >= static_cast<int>(modules_.size()))
+        {
+            return;
+        }
+
+        SetModuleEnabled(modules_[row], is_enabled);
+    }
+
+    void ModuleModel::ResetModuleAtRow(const int row)
+    {
+        if (row < 0 || row >= static_cast<int>(modules_.size()))
+        {
+            return;
+        }
+
+        ResetModuleToDefault(modules_[row]);
     }
 
     QVariant ModuleModel::DisplayData(const DevToolsModule* module, const int column) const

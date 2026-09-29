@@ -110,6 +110,10 @@ public:
 
     const devtrace::TraceSourceStatus& GetSourceStatus() const;
 
+    /// @brief Gets the extension of the files this trace source writes.
+    /// @return The file extension, without the dot.
+    [[nodiscard]] const QString& GetFileExtension() const;
+
 protected:
     /// @brief Returns whether or not the UI should be enabled for the given trace source stage.
     /// @param [in] stage The stage to check if the UI should be enabled for.

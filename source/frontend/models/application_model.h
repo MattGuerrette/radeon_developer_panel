@@ -53,7 +53,27 @@ namespace rdp
         enum DataRoles : int32_t
         {
             kMutableDataRole = Qt::UserRole + 1,  ///< Used to access mutable data within model
+            kNameRole,                            ///< The application's executable name.
+            kIsAliveRole,                         ///< Whether the application currently has a live client.
         };
+
+        /// @brief QAbstractItemModel::roleNames() override.
+        /// @return The role names the QML front-end binds to.
+        QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
+
+        /// @brief Gets the sentence describing what the panel will connect to with the current filters.
+        /// @return The description shown under the application filters.
+        QString GetConnectionBehaviorDescription();
+
+        /// @brief Renames the application in the given row.
+        /// @param [in] row The row of the application.
+        /// @param [in] name The new name.
+        /// @return true when the rename was accepted.
+        Q_INVOKABLE bool RenameApplicationAtRow(int row, const QString& name);
+
+        /// @brief Removes the application in the given row.
+        /// @param [in] row The row of the application.
+        Q_INVOKABLE void RemoveApplicationAtRow(int row);
 
         /// @brief Constructor.
         /// @param [in] settings_manager Manages the RDP application settings.

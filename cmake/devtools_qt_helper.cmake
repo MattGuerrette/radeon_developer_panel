@@ -6,9 +6,9 @@ cmake_minimum_required(VERSION 3.10)
 
 # Attempt to automatically find Qt on the local machine
 if (LINUX)
-    find_package(Qt6 QUIET COMPONENTS REQUIRED Core Widgets Network Gui Test WaylandClient)
+    find_package(Qt6 QUIET COMPONENTS REQUIRED Core Widgets Network Gui Test Qml Quick QuickControls2 WaylandClient)
 else ()
-    find_package(Qt6 QUIET COMPONENTS Core Widgets Network Gui Test)
+    find_package(Qt6 QUIET COMPONENTS Core Widgets Network Gui Test Qml Quick QuickControls2)
 endif ()
 
 if (Qt6_DIR)
@@ -41,13 +41,26 @@ if (Qt6_DIR)
         endforeach()
     endif ()
 
+    # QML_DIR names the root of a target's .qml sources. windeployqt cannot scan QML that
+    # has been compiled into the binary's resources, so a QML target has to point it at the
+    # sources or the modules its imports need are left undeployed.
     function(deploy_qt_build target)
+        set(options)
+        set(one_value_args QML_DIR)
+        set(multi_value_args)
+        cmake_parse_arguments(ARG "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
         set(DEPLOY_QT_HELPER_EXE $<TARGET_FILE:DeployQtHelper>)
+
+        set(DEPLOYQT_QML_OPTIONS)
+        if (ARG_QML_DIR)
+            set(DEPLOYQT_QML_OPTIONS --qmldir ${ARG_QML_DIR})
+        endif ()
 
         if (WIN32)
             find_program(DEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
             set(DEPLOYQT_POST_BUILD_COMMAND
-                    ${DEPLOY_QT_HELPER_EXE} ${DEPLOYQT_EXECUTABLE} $<TARGET_FILE:${target}> -verbose 0 --no-compiler-runtime --no-translations --no-system-d3d-compiler --no-system-dxc-compiler --no-opengl-sw --no-network
+                    ${DEPLOY_QT_HELPER_EXE} ${DEPLOYQT_EXECUTABLE} $<TARGET_FILE:${target}> -verbose 0 --no-compiler-runtime --no-translations --no-system-d3d-compiler --no-system-dxc-compiler --no-opengl-sw ${DEPLOYQT_QML_OPTIONS}
                     WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
             # Adds a lockfile and makes sure the locking utility is built
@@ -70,17 +83,25 @@ if (Qt6_DIR)
     endfunction()
 
     function(deploy_qt target component)
+        set(options)
+        set(one_value_args QML_DIR)
+        set(multi_value_args)
+        cmake_parse_arguments(ARG "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
         set(target_file_dir "$<TARGET_FILE_DIR:${target}>")
         set(target_file_name "$<TARGET_FILE_NAME:${target}>")
 
         # Handle build-time deployment
-        deploy_qt_build(${target})
+        deploy_qt_build(${target} QML_DIR "${ARG_QML_DIR}")
 
         # Handle install deployment
 
         set(EXECUTABLE_PATH "\${QT_DEPLOY_BIN_DIR}/${target_file_name}")
         if (WIN32)
-            set(CUSTOM_DEPLOY_TOOL_OPTIONS "--no-compiler-runtime --no-translations --no-system-d3d-compiler --no-system-dxc-compiler --no-opengl-sw --no-network")
+            set(CUSTOM_DEPLOY_TOOL_OPTIONS "--no-compiler-runtime --no-translations --no-system-d3d-compiler --no-system-dxc-compiler --no-opengl-sw")
+            if (ARG_QML_DIR)
+                string(APPEND CUSTOM_DEPLOY_TOOL_OPTIONS " --qmldir ${ARG_QML_DIR}")
+            endif ()
             # Generate deployment script of Qt binaries and plugins
             qt_generate_deploy_script(TARGET ${target}
                     OUTPUT_SCRIPT deploy_script

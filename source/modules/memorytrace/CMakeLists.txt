@@ -9,6 +9,9 @@ set(CMAKE_AUTORCC ON)
 
 set(DEVTOOLS_MODULE_FOLDER "DevTools Modules/Memory Trace")
 
+### QML view #########################################################################################################
+add_subdirectory(qml/Rdp/Modules/MemoryTrace)
+
 ### Module Core #######################################################################################################
 add_library(DevToolsMemoryTraceModule STATIC)
 devtools_target_options(DevToolsMemoryTraceModule)
@@ -23,7 +26,9 @@ target_link_libraries(DevToolsMemoryTraceModule
         QtCustomWidgets
         MercuryModuleExt
         DevToolsCommonStatic
-        Qt::Widgets
+        rdp_controls
+        rdp_module_memorytrace
+        Qt::Quick
         LibDevTrace
 )
 set_target_properties(DevToolsMemoryTraceModule

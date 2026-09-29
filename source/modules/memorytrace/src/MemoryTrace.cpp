@@ -7,6 +7,8 @@
 
 #include "MemoryTrace.h"
 
+#include <common/inc/model/capture_view_model.h>
+
 #include <dd_memory_trace_api.h>
 
 #include <chunk_writing.h>
@@ -70,18 +72,23 @@ DD_RESULT MemoryTraceDevToolsModule::Initialize(class QSettings* tool_settings)
     memory_trace_model_           = std::make_shared<MemoryTraceViewModel>(stream_provider, trace_source_, file_utils, file_opener, tool_settings, logger);
     base_trace_source_view_model_ = memory_trace_model_;
 
+    qml_view_model_ = std::make_unique<CaptureViewModel>(memory_trace_model_,
+                                                        utility_view_model_,
+                                                        [this] { memory_trace_model_->RequestDump(); });
+
     return connection_manager_v2_->Initialize(trace_source_) ? DD_RESULT_SUCCESS : DD_RESULT_UNKNOWN;
 }
 
-QWidget* MemoryTraceDevToolsModule::CreateView() const
+MemoryTraceDevToolsModule::~MemoryTraceDevToolsModule() = default;
+
+QUrl MemoryTraceDevToolsModule::GetQmlViewUrl() const
 {
-    const auto utility_view = new BaseUtilityView();
-    utility_view->SetBaseModel(utility_view_model_);
+    return QUrl("qrc:/qt/qml/Rdp/Modules/MemoryTrace/MemoryTraceView.qml");
+}
 
-    const auto view = new MemoryTraceView(utility_view, memory_trace_model_);
-    view->SetUserdataViewModel(utility_view_model_);
-
-    return view;
+QObject* MemoryTraceDevToolsModule::GetViewModel() const
+{
+    return qml_view_model_.get();
 }
 
 bool MemoryTraceDevToolsModule::IsCompatibleWithApi(devtrace::Api api) const

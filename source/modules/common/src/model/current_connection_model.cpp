@@ -85,9 +85,14 @@ void CurrentConnectionModel::UpdateCaptureTargetIndex(const uint32_t capture_tar
     capture_target_index_ = -1;
 }
 
+QHash<int, QByteArray> CurrentConnectionModel::roleNames() const
+{
+    return {{kNameRole, "name"}};
+}
+
 QVariant CurrentConnectionModel::data(const QModelIndex& index, const int role) const
 {
-    if (role != Qt::DisplayRole)
+    if (role != Qt::DisplayRole && role != kNameRole)
     {
         return {};
     }

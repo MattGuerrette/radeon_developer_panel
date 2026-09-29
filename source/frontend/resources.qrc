@@ -54,8 +54,5 @@
         <file alias="PeakClockOff.png">../assets/peak_clock_off.png</file>
         <file alias="PeakClockHover.png">../assets/peak_clock_hover.png</file>
         <file alias="bug_report_template.txt">../assets/bug_report_template.txt</file>
-        <file alias="common.qss">stylesheets/common.qss</file>
-        <file alias="light.qss">stylesheets/light.qss</file>
-        <file alias="dark.qss">stylesheets/dark.qss</file>
     </qresource>
 </RCC>

@@ -20,7 +20,6 @@
 #include <common/inc/api/dev_tools_module.h>
 
 #include "logging/logging_manager.h"
-#include "mainwindow.h"
 
 namespace rdp
 {
@@ -798,6 +797,16 @@ namespace rdp
             {
                 variant = GetApplicationDataForMutableRole(application, index);
             }
+
+            if (role == kNameRole)
+            {
+                variant = application->GetName();
+            }
+
+            if (role == kIsAliveRole)
+            {
+                variant = application->IsAlive();
+            }
         }
 
         return variant;
@@ -811,6 +820,26 @@ namespace rdp
         }
 
         return ApplicationData(index, role);
+    }
+
+    QHash<int, QByteArray> ApplicationModel::roleNames() const
+    {
+        return {{kNameRole, "name"}, {kIsAliveRole, "isAlive"}};
+    }
+
+    QString ApplicationModel::GetConnectionBehaviorDescription()
+    {
+        return GetRawConnectionBehaviorString();
+    }
+
+    bool ApplicationModel::RenameApplicationAtRow(const int row, const QString& name)
+    {
+        return setData(index(row, kClientItemColumnName, {}), name, Qt::EditRole);
+    }
+
+    void ApplicationModel::RemoveApplicationAtRow(const int row)
+    {
+        removeRows(row, 1, {});
     }
 
     bool ApplicationModel::setData(const QModelIndex& index, const QVariant& value, const int role)

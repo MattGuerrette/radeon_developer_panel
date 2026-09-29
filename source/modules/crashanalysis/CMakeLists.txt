@@ -9,6 +9,9 @@ set(CMAKE_AUTORCC ON)
 
 set(DEVTOOLS_MODULE_FOLDER "DevTools Modules/Crash Analysis")
 
+### QML view #########################################################################################################
+add_subdirectory(qml/Rdp/Modules/CrashAnalysis)
+
 add_library(DevToolsCrashAnalysisModule STATIC)
 
 devtools_target_options(DevToolsCrashAnalysisModule)
@@ -23,7 +26,9 @@ target_link_libraries(DevToolsCrashAnalysisModule
         DevToolsCommonStatic
         QtCustomWidgets
         QtUtils
-        Qt::Widgets
+        rdp_controls
+        rdp_module_crashanalysis
+        Qt::Quick
         LibDevTrace
 )
 

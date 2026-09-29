@@ -335,6 +335,11 @@ void TraceSourceViewModel::RequestAbort(DDConnectionId umd_connection_id)
     }
 }
 
+const QString& TraceSourceViewModel::GetFileExtension() const
+{
+    return extension_;
+}
+
 void TraceSourceViewModel::SetOutputPath(const QString& path)
 {
     const std::scoped_lock lock(output_path_mutex_);

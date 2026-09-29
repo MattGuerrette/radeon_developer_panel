@@ -64,6 +64,10 @@ function(devtools_target_options name)
                 # This happens when using later versions of Qt than RDP defaults to.
                 /wd4996
 
+                # TODO this warning is caused by the QT header files - use pragma to disable at source
+                # disable warning C4702: unreachable code
+                /wd4702
+
                 # Enable control flow guard
                 /guard:cf
         )
